@@ -4,7 +4,6 @@ import akka.actor.typed.ActorRef
 import cats.data.Validated
 import event.BoardEvent
 import states.Board
-import states.Board.Archived
 
 
 sealed trait BoardCommand extends Command[BoardEvent, Board]
@@ -16,6 +15,14 @@ object BoardCommand {
     override def validate(id: String, persisted: Option[Board]): Validated[Command.Error, BoardEvent] = Validated.valid(BoardEvent.Exit)
   }
 
-  case class Create(title: String, description: String, replyTo: ActorRef[Either[Command.Error, BoardEvent]]) extends BoardCommand
+  case class Create(title: String, description: String, replyTo: ActorRef[Either[Command.Error, BoardEvent]]) extends BoardCommand {
+    override def validate(id: String, persisted: Option[Board]): Validated[Command.Error, BoardEvent] =
+      if (title.isEmpty || description.isEmpty)
+        Validated.invalid("description or title must not be empty")
+      else
+        Validated.valid(BoardEvent.Created(id, title, description))
+  }
+
   case class Archive(replyTo: ActorRef[Either[String, BoardEvent]]) extends BoardCommand
+
 }
