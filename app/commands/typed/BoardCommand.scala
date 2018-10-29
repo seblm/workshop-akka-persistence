@@ -17,7 +17,9 @@ object BoardCommand {
 
   case class Create(title: String, description: String, replyTo: ActorRef[Either[Command.Error, BoardEvent]]) extends BoardCommand {
     override def validate(id: String, persisted: Option[Board]): Validated[Command.Error, BoardEvent] =
-      if (title.isEmpty || description.isEmpty)
+      if (persisted.nonEmpty)
+        Validated.invalid("board already exists")
+      else if (title.isEmpty || description.isEmpty)
         Validated.invalid("description or title must not be empty")
       else
         Validated.valid(BoardEvent.Created(id, title, description))

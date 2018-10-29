@@ -38,7 +38,9 @@ object TicketCommand {
 
   case class Create(boardId: String, title: String, description: String, replyTo: ActorRef[Either[Command.Error, TicketEvent]]) extends TicketCommand {
     override def validate(id: String, persisted: Option[Ticket]): Validated[Command.Error, TicketEvent] =
-      if (title.isEmpty || description.isEmpty)
+      if (persisted.nonEmpty)
+        Validated.invalid("ticket already exists")
+      else if (title.isEmpty || description.isEmpty)
         Validated.invalid("title or description can't be empty")
       else
         Validated.valid(TicketEvent.Created(id, boardId, title, description))
